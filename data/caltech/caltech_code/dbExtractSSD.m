@@ -23,7 +23,7 @@ function dbExtractSSD( tDir, flatten, skip )
 % Copyright 2014 Piotr Dollar.  [pdollar-at-gmail.com]
 % Licensed under the Simplified BSD License [see external/bsd.txt]
 
-[pth,setIds,vidIds] = dbInfo;
+[pth,setIds,vidIds,~,~,dsname] = dbInfo;
 if(nargin<1 || isempty(tDir)), tDir=pth; end
 if(nargin<2 || isempty(flatten)), flatten=0; end
 if(nargin<3 || isempty(skip)), [~,~,~,skip]=dbInfo; end
@@ -41,12 +41,12 @@ for s=1:length(setIds)
     td=[tDir '/images/' post]; if(~exist(td,'dir')), mkdir(td); end
     sr=seqIo([pth '/videos/' name '.seq'],'reader'); info=sr.getinfo();
     for i=skip-1:skip:n-1
-      f=[td fs{i+1} '.' info.ext]; if(exist(f,'file')), continue; end
+      f=[td fs{i+1} '_' dsname '.' info.ext]; if(exist(f,'file')), continue; end
       sr.seek(i); I=sr.getframeb(); f=fopen(f,'w'); fwrite(f,I); fclose(f);
     end; sr.close();
     % extract ground truth
     td=[tDir '/annotations/' post];
-    for i=1:n, fs{i}=[fs{i} '.txt']; end
+    for i=1:n, fs{i}=[fs{i} '_' dsname '.txt']; end
     count = count + vbbToFiles(A,td,fs,skip,skip);
   end
 end

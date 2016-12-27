@@ -1,8 +1,11 @@
 #!/bin/bash
 
-root_dir=$HOME/caltech-data/
-sub_dir=images/
+# to be run from the current directory
+
 bash_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root_dir=$bash_dir
+sub_dir=images/
+
 for dataset in trainval test
 do
   dst_file=$bash_dir/$dataset.txt
@@ -15,12 +18,12 @@ do
   dataset_dir=$root_dir/$dataset/$sub_dir/
 
   img_file=$bash_dir/$dataset"_img.txt"
-  ls -1 "$dataset_dir" | sed -e 's/\.jpg$//' > "$img_file"
+  ls -1 "$dataset_dir" | sed -e 's/\$//' > "$img_file"
   sed -i "s/^/$dataset\/images\//g" "$img_file"
-  sed -i "s/$/.jpg/g" "$img_file"
+  sed -i "s/$//g" "$img_file"
 
   label_file=$bash_dir/$dataset"_label.txt"
-  ls -1 "$dataset_dir" | sed -e 's/\.jpg$//' > "$label_file"
+  ls -1 "$dataset_dir" | sed -e 's/\.jpg$//' -e 's/\.png$//' > "$label_file"
   sed -i "s/^/$dataset\/annotations\//g" "$label_file"
   sed -i "s/$/.txt/g" "$label_file"
 

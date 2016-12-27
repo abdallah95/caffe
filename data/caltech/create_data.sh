@@ -1,10 +1,14 @@
+#!/bin/bash
+
+# to be run from the current directory
+
 cur_dir=$(cd $( dirname ${BASH_SOURCE[0]} ) && pwd )
 root_dir=$cur_dir/../..
 
 cd "$root_dir"
 
 redo=1
-data_root_dir="$HOME/caltech-data/"
+data_root_dir=$cur_dir
 dataset_name="caltech"
 mapfile="$root_dir/data/$dataset_name/labelmap_caltech.prototxt"
 anno_type="detection"

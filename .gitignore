@@ -63,6 +63,11 @@ Makefile.config
 # 2. custom, and live on their own unless they're deliberated contributed
 data/*
 !data/caltech/
+data/caltech/caltech_code/data-ETH/
+data/caltech/caltech_code/data-USA/
+data/caltech/caltech_code/data-TudBrussels/
+data/caltech/trainval/
+data/caltech/test/
 models/*
 *.caffemodel
 *.caffemodel.h5

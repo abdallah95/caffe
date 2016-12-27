@@ -1,4 +1,4 @@
-function [pth,setIds,vidIds,skip,ext] = dbInfo( name1 )
+function [pth,setIds,vidIds,skip,ext,dsname] = dbInfo( name1 )
 % Specifies data amount and location.
 %
 % 'name' specifies the name of the dataset. Valid options include: 'Usa',
@@ -10,7 +10,7 @@ function [pth,setIds,vidIds,skip,ext] = dbInfo( name1 )
 % 'UsaTest' and 'UsaTest01005' indicate first set, fifth video).
 %
 % USAGE
-%  [pth,setIds,vidIds,skip,ext] = dbInfo( [name] )
+%  [pth,setIds,vidIds,skip,ext,dsname] = dbInfo( [name] )
 %
 % INPUTS
 %  name     - ['UsaTest'] specify dataset, caches last passed in name
@@ -21,9 +21,9 @@ function [pth,setIds,vidIds,skip,ext] = dbInfo( name1 )
 %  vidIds   - [1xnSets] cell of vectors of integer ids of each video
 %  skip     - specify subset of frames to use for evaluation
 %  ext      - file extension determining image format ('jpg' or 'png')
-%
+%  dsname   - dataset name
 % EXAMPLE
-%  [pth,setIds,vidIds,skip,ext] = dbInfo
+%  [pth,setIds,vidIds,skip,ext,dsname] = dbInfo
 %
 % See also
 %
@@ -39,7 +39,7 @@ vidId=str2double(name1(end-2:end)); % check if name ends in 3 ints
 if(isnan(vidId)), vidId=[]; else name1=name1(1:end-3); end
 setId=str2double(name1(end-1:end)); % check if name ends in 2 ints
 if(isnan(setId)), setId=[]; else name1=name1(1:end-2); end
-
+dsname=name1;
 switch name1
   case 'usa' % Caltech Pedestrian Datasets (all)
     setIds=0:10; subdir='USA'; skip=10; ext='jpg';
