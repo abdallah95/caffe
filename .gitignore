@@ -64,8 +64,13 @@ Makefile.config
 data/*
 !data/caltech/
 data/caltech/caltech_code/data-ETH/
-data/caltech/caltech_code/data-USA/
+data/caltech/caltech_code/data-USA/*
+!data/caltech/caltech_code/data-USA/res/
+data/caltech/caltech_code/data-USA/res/*
+!data/caltech/caltech_code/data-USA/res/SSD/
+data/caltech/caltech_code/data-USA/res/SSD/comp4_det_test_person.txt
 data/caltech/caltech_code/data-TudBrussels/
+data/caltech/caltech_code/results/
 data/caltech/trainval/
 data/caltech/test/
 models/*

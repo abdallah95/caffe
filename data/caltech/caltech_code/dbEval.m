@@ -120,7 +120,9 @@ algs = {
   'SCF+AlexNet',      0, clrs(56,:),  '-'
   'SA-FastRCNN',      0, clrs(57,:),  '--'
   'RPN+BF',           0, clrs(58,:),  '-'
-  'MS-CNN',           0, clrs(59,:),  '--' };
+  'MS-CNN',           0, clrs(59,:),  '--'
+  'SSD',              0, clrs(60,:),  '--'
+  'F-DNN',            0, clrs(61,:),  '--'};
 algs=cell2struct(algs',{'name','resize','color','style'});
 
 % List of database names
@@ -150,7 +152,7 @@ for d=1:length(dataNames), dataName=dataNames{d};
   names={algs0.name}; n=length(names); keep=false(1,n);
   for i=1:n, keep(i)=exist([dbInfo '/res/' names{i} set],'dir'); end
   algs=algs0(keep);
-  
+
   % handle special database specific cases
   if(any(strcmp(dataName,{'InriaTest','TudBrussels','ETH'})))
     bnds=[-inf -inf inf inf]; else bnds=bnds0; end
@@ -167,7 +169,7 @@ for d=1:length(dataNames), dataName=dataNames{d};
   dts = loadDt( algs, plotName, aspectRatio );
   gts = loadGt( exps, plotName, aspectRatio, bnds );
   res = evalAlgs( plotName, algs, exps, gts, dts );
-  
+
   % plot curves and bbs
   plotExps( res, plotRoc, plotAlg, plotNum, plotName, ...
     samples, lims, reshape([algs.color]',3,[])', {algs.style} );
@@ -272,6 +274,7 @@ for p=1:nPlots
     xlabel('Recall','FontSize',14); ylabel('Precision','FontSize',14);
   end
   if(~isempty(lgd1)), legend(h,lgd1,'Location','sw','FontSize',10); end
+  pause
   % save figure to disk (uncomment pdfcrop commands to automatically crop)
   [o,~]=system('pdfcrop'); if(o==127), setenv('PATH',...
       [getenv('PATH') ':/Library/TeX/texbin/:/usr/local/bin/']); end
