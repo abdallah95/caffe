@@ -2171,11 +2171,13 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
   }
 
   int fontface = cv::FONT_HERSHEY_SIMPLEX;
-  double scale = 1;
-  int thickness = 2;
+  double scale = 0.2;
+  int thickness = 0;
   int baseline = 0;
   char buffer[50];
   for (int i = 0; i < num_img; ++i) {
+    scale = 1;
+    thickness = 2;
     cv::Mat image = images[i];
     // Show FPS.
     snprintf(buffer, sizeof(buffer), "FPS: %.2f", fps);
@@ -2187,6 +2189,8 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     cv::putText(image, buffer, cv::Point(0, text.height + baseline / 2.),
                 fontface, scale, CV_RGB(0, 0, 0), thickness, 8);
     // Draw bboxes.
+    scale = 0.2;
+    thickness = 0;
     for (map<int, vector<NormalizedBBox> >::iterator it =
          all_detections[i].begin(); it != all_detections[i].end(); ++it) {
       int label = it->first;

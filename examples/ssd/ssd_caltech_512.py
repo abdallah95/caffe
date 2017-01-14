@@ -328,7 +328,7 @@ for ratio in xrange(min_ratio, max_ratio + 1, step):
 min_sizes = [min_dim * 7 / 100.] + min_sizes
 max_sizes = [min_dim * 15 / 100.] + max_sizes
 steps = [8, 16, 32, 64, 128, 256, 512]
-aspect_ratio_per_layer = [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0]
+aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
 aspect_ratios = [aspect_ratio_per_layer]*len(mbox_source_layers)
 #aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
 # L2 normalize conv4_3.
@@ -345,7 +345,7 @@ clip = False
 # Defining which GPUs to use.
 gpus = "0"
 gpulist = gpus.split(",")
-num_gpus = len(gpulist)*0
+num_gpus = len(gpulist)
 
 # Divide the mini-batch to different GPUs.
 batch_size = 1
@@ -371,7 +371,7 @@ elif normalization_mode == P.Loss.FULL:
 
 # Evaluate on whole test set.
 num_test_image = 4024
-test_batch_size = 8
+test_batch_size = 1
 test_iter = num_test_image / test_batch_size
 
 solver_param = {
@@ -384,7 +384,7 @@ solver_param = {
     'momentum': 0.9,
     'iter_size': iter_size,
     'max_iter': 120000,
-    'snapshot': 40000,
+    'snapshot': 1000,
     'display': 10,
     'average_loss': 10,
     'type': "SGD",
@@ -398,6 +398,7 @@ solver_param = {
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
+    'snapshot_prefix': snapshot_prefix,
     }
 
 # parameters for generating detection output.
@@ -529,7 +530,6 @@ shutil.copy(deploy_net_file, job_dir)
 solver = caffe_pb2.SolverParameter(
         train_net=train_net_file,
         test_net=[test_net_file],
-        snapshot_prefix=snapshot_prefix,
         **solver_param)
 
 with open(solver_file, 'w') as f:
