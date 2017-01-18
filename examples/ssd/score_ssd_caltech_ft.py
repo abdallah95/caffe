@@ -76,18 +76,17 @@ def AddExtraLayers(net, use_batchnorm=True, lr_mult=1):
     return net
 
 
+
 ### Modify the following parameters accordingly ###
+# Notice: we do evaluation by setting the solver parameters approximately.
+# The reason that we do not use ./build/tools/caffe test ... is because it
+# only supports testing for classification problem now.
 # The directory which contains the caffe code.
 # We assume you are running the script at the CAFFE_ROOT.
 caffe_root = os.getcwd()
 
 # Set true if you want to start training right after generating all files.
 run_soon = True
-# Set true if you want to load from most recently saved snapshot.
-# Otherwise, we will load from the pretrain_model defined below.
-resume_training = True
-# If true, Remove old model files.
-remove_old_models = False
 
 # The database file for training data. Created by data/caltech/create_data.sh
 train_data = "examples/caltech/caltech_trainval_lmdb"
@@ -240,19 +239,19 @@ if use_batchnorm:
     base_lr = 0.0004
 else:
     # A learning rate for batch_size = 1, num_gpus = 1.
-    base_lr = 0.0000004
+    base_lr = 0.00004
 
-# Modify the job name if you want.
+# The job name should be same as the name used in examples/ssd/ssd_pascal.py.
 job_name = "SSD_{}_ft".format(resize)
 # The name of the model. Modify it if you want.
 model_name = "VGG_caltech_{}".format(job_name)
 
 # Directory which stores the model .prototxt file.
-save_dir = "models/VGGNet/caltech/{}".format(job_name)
-# Directory which stores the snapshot of models.
+save_dir = "models/VGGNet/caltech/{}_score".format(job_name)
+# Directory which stores the snapshot of trained models.
 snapshot_dir = "models/VGGNet/caltech/{}".format(job_name)
 # Directory which stores the job script and log file.
-job_dir = "jobs/VGGNet/caltech/{}".format(job_name)
+job_dir = "jobs/VGGNet/caltech/{}_score".format(job_name)
 # Directory which stores the detection results.
 output_result_dir = "examples/caltech/results/{}".format(job_name)
 
@@ -266,10 +265,23 @@ snapshot_prefix = "{}/{}".format(snapshot_dir, model_name)
 # job script path.
 job_file = "{}/{}.sh".format(job_dir, model_name)
 
+# Find most recent snapshot.
+max_iter = 0
+for file in os.listdir(snapshot_dir):
+  if file.endswith(".caffemodel"):
+    basename = os.path.splitext(file)[0]
+    iter = int(basename.split("{}_iter_".format(model_name))[1])
+    if iter > max_iter:
+      max_iter = iter
+
+if max_iter == 0:
+  print("Cannot find snapshot in {}".format(snapshot_dir))
+  sys.exit()
+
 # Stores the test image names and sizes. Created by data/caltech/create_list.sh
 name_size_file = "data/caltech/test_name_size.txt"
-# The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
-pretrain_model = "models/VGGNet/VOC0712Plus/SSD_512x512_ft/VGG_VOC0712Plus_SSD_512x512_ft_iter_160000.caffemodel"
+# The resume model.
+pretrain_model = "{}_iter_{}.caffemodel".format(snapshot_prefix, max_iter)
 # Stores LabelMapItem.
 label_map_file = "data/caltech/labelmap_caltech.prototxt"
 
@@ -347,9 +359,9 @@ gpus = "0"
 gpulist = gpus.split(",")
 num_gpus = len(gpulist)
 
-# Divide the mini-batch to different GPUs.
+# The number does not matter since we do not do training with this script.
 batch_size = 1
-accum_batch_size = 32
+accum_batch_size = 1
 iter_size = accum_batch_size / batch_size
 solver_mode = P.Solver.CPU
 device_id = 0
@@ -372,7 +384,9 @@ elif normalization_mode == P.Loss.FULL:
 # Evaluate on whole test set.
 num_test_image = 4024
 test_batch_size = 1
-test_iter = num_test_image / test_batch_size
+# Ideally test_batch_size should be divisible by num_test_image,
+# otherwise mAP will be slightly off the true value.
+test_iter = int(math.ceil(float(num_test_image) / test_batch_size))
 
 solver_param = {
     # Train parameters
@@ -383,22 +397,21 @@ solver_param = {
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 120000,
-    'snapshot': 1000,
+    'max_iter': 0,
+    'snapshot': 0,
     'display': 10,
     'average_loss': 10,
     'type': "SGD",
     'solver_mode': solver_mode,
     'device_id': device_id,
     'debug_info': False,
-    'snapshot_after_train': True,
+    'snapshot_after_train': False,
     # Test parameters
     'test_iter': [test_iter],
     'test_interval': 10000,
     'eval_type': "detection",
     'ap_version': "11point",
-    'test_initialization': False,
-    'snapshot_prefix': snapshot_prefix,
+    'test_initialization': True,
     }
 
 # parameters for generating detection output.
@@ -410,7 +423,7 @@ det_out_param = {
     'save_output_param': {
         'output_directory': output_result_dir,
         'output_name_prefix': "comp4_det_test_",
-        'output_format': "txt",
+        'output_format': "VOC",
         'label_map_file': label_map_file,
         'name_size_file': name_size_file,
         'num_test_image': num_test_image,
@@ -428,6 +441,7 @@ det_eval_param = {
     'evaluate_difficult_gt': False,
     'name_size_file': name_size_file,
     }
+
 
 ### Hopefully you don't need to change the following ###
 # Check file.
@@ -530,48 +544,21 @@ shutil.copy(deploy_net_file, job_dir)
 solver = caffe_pb2.SolverParameter(
         train_net=train_net_file,
         test_net=[test_net_file],
+        snapshot_prefix=snapshot_prefix,
         **solver_param)
 
 with open(solver_file, 'w') as f:
     print(solver, file=f)
 shutil.copy(solver_file, job_dir)
 
-max_iter = 0
-# Find most recent snapshot.
-for file in os.listdir(snapshot_dir):
-  if file.endswith(".solverstate"):
-    basename = os.path.splitext(file)[0]
-    iter = int(basename.split("{}_iter_".format(model_name))[1])
-    if iter > max_iter:
-      max_iter = iter
-
-train_src_param = '--weights="{}" \\\n'.format(pretrain_model)
-if resume_training:
-  if max_iter > 0:
-    train_src_param = '--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, max_iter)
-
-if remove_old_models:
-  # Remove any snapshots smaller than max_iter.
-  for file in os.listdir(snapshot_dir):
-    if file.endswith(".solverstate"):
-      basename = os.path.splitext(file)[0]
-      iter = int(basename.split("{}_iter_".format(model_name))[1])
-      if max_iter > iter:
-        os.remove("{}/{}".format(snapshot_dir, file))
-    if file.endswith(".caffemodel"):
-      basename = os.path.splitext(file)[0]
-      iter = int(basename.split("{}_iter_".format(model_name))[1])
-      if max_iter > iter:
-        os.remove("{}/{}".format(snapshot_dir, file))
-
 # Create job file.
 with open(job_file, 'w') as f:
   f.write('cd {}\n'.format(caffe_root))
   f.write('./build/tools/caffe train \\\n')
   f.write('--solver="{}" \\\n'.format(solver_file))
-  f.write(train_src_param)
+  f.write('--weights="{}" \\\n'.format(pretrain_model))
   if solver_param['solver_mode'] == P.Solver.GPU:
-    f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
+    f.write('--gpu {} 2>&1 | tee {}/{}_test{}.log\n'.format(gpus, job_dir, model_name, max_iter))
   else:
     f.write('2>&1 | tee {}/{}.log\n'.format(job_dir, model_name))
 
