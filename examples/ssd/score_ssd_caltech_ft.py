@@ -337,8 +337,8 @@ max_sizes = []
 for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [min_dim * 4 / 100.] + min_sizes
-max_sizes = [min_dim * 15 / 100.] + max_sizes
+min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100.]] + min_sizes
+max_sizes = [[min_dim * 7 / 100., min_dim * 10 / 100.]] + max_sizes
 steps = [8, 16, 32, 64, 128, 256, 512]
 aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
 aspect_ratios = [aspect_ratio_per_layer]*len(mbox_source_layers)
