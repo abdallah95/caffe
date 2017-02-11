@@ -122,7 +122,8 @@ algs = {
   'RPN+BF',           0, clrs(58,:),  '-'
   'MS-CNN',           0, clrs(59,:),  '--'
   'SSD',              0, clrs(60,:),  '--'
-  'F-DNN',            0, clrs(61,:),  '--'};
+  'SSD-FT',           0, clrs(61,:),  '--'
+  'F-DNN',            0, clrs(62,:),  '--'};
 algs=cell2struct(algs',{'name','resize','color','style'});
 
 % List of database names
@@ -131,7 +132,7 @@ dataNames = {'UsaTest','UsaTrain','InriaTest',...
 
 % select databases, experiments and algorithms for evaluation
 dataNames = dataNames(1); % select one or more databases for evaluation
-exps = exps(1);           % select one or more experiment for evaluation
+exps = exps(:);           % select one or more experiment for evaluation
 algs = algs(:);           % select one or more algorithms for evaluation
 
 % remaining parameters and constants
@@ -274,12 +275,11 @@ for p=1:nPlots
     xlabel('Recall','FontSize',14); ylabel('Precision','FontSize',14);
   end
   if(~isempty(lgd1)), legend(h,lgd1,'Location','sw','FontSize',10); end
-  pause
   % save figure to disk (uncomment pdfcrop commands to automatically crop)
   [o,~]=system('pdfcrop'); if(o==127), setenv('PATH',...
       [getenv('PATH') ':/Library/TeX/texbin/:/usr/local/bin/']); end
   savefig(fName1,1,'pdf','-r300','-fonts'); close(1); f1=[fName1 '.pdf'];
-  system(['pdfcrop -margins ''-30 -20 -50 -10 '' ' f1 ' ' f1]);
+  system(['pdfcrop ' f1 ' ' f1]);
 end
 
 end

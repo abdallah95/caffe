@@ -139,7 +139,7 @@ end
 fclose(fid);
 end
 
-function count = bbSaveSSD( objs, fName )
+function count = bbSaveSSD( objs, fName, only_visible)
 % Save bb annotation to text file as "label_index xmin ymin xmax ymax" to be used with caffe-ssd.
 % 
 % USAGE
@@ -165,34 +165,25 @@ for i=1:length(objs)
   o=objs(i);
   if o.ign==0 && strcmp(o.lbl,'person')
       lbl = 1;
-      count = count + 1;
   else
       continue;
   end
   % check if it's ocluded
-  if o.occ==1  % if yes, put only the visible box
+  if o.occ==1 && only_visible % if true, put only the visible box
       bb=o.bbv;
   else
       bb=o.bb;
   end
   xmin = bb(1);ymin = bb(2);
   xmax = bb(1)+bb(3);ymax = bb(2)+bb(4);
-  if abs(ymax-ymin)<=20 || xmin<1 || xmax>640 || ymin<1 || ymax>480
-      count = count - 1;
+  visible_ratio = 1;
+  if o.occ==1
+      visible_ratio = (o.bbv(4)*o.bbv(3))/(o.bb(3)*o.bb(4));
+  end
+  if abs(ymax-ymin)<20 || xmin<1 || xmax>640 || ymin<1 || ymax>480 || visible_ratio<0.2
       continue;
   end
-%   if xmin<1
-%       xmin=1;
-%   end
-%   if xmax>640
-%       xmax = 640;
-%   end
-%   if ymin<1
-%       ymin=1;
-%   end
-%   if ymax>480
-%       ymax=480;
-%   end
+  count = count + 1;
   fprintf(fid,['%i' repmat(' %i',1,4) '\n'],lbl,[xmin ymin xmax ymax]);
 end
 fclose(fid);

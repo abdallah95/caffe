@@ -69,7 +69,7 @@ for f=f0:skip:f1
     o=A.objLists{f}(j); objs(j).lbl=A.objLbl{o.id}; objs(j).occ=o.occl;
     objs(j).bb=round(o.pos); objs(j).bbv=round(o.posv);
   end
-  count = count + bbGt('bbSaveSSD',objs,[tarDir '/' fs{f}]);
+  count = count + bbGt('bbSaveSSD',objs,[tarDir '/' fs{f}],0);
 end
 end
 
