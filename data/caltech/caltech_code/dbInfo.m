@@ -45,7 +45,7 @@ switch name1
     setIds=0:10; subdir='USA'; skip=10; ext='jpg';
     vidIds={0:14 0:5 0:11 0:12 0:11 0:12 0:18 0:11 0:10 0:11 0:11};
   case 'usatrain' % Caltech Pedestrian Datasets (training)
-    setIds=0:5; subdir='USA'; skip=15; ext='jpg';
+    setIds=0:5; subdir='USA'; skip=5; ext='jpg';
     vidIds={0:14 0:5 0:11 0:12 0:11 0:9};
   case 'usatest' % Caltech Pedestrian Datasets (testing)
     setIds=6:10; subdir='USA'; skip=30; ext='jpg';
