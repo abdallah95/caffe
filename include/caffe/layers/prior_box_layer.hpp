@@ -71,6 +71,8 @@ class PriorBoxLayer : public Layer<Dtype> {
   bool clip_;
   vector<float> variance_;
 
+  bool extra_ar_;
+
   int img_w_;
   int img_h_;
   float step_w_;

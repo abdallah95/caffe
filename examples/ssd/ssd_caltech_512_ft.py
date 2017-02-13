@@ -269,7 +269,8 @@ job_file = "{}/{}.sh".format(job_dir, model_name)
 # Stores the test image names and sizes. Created by data/caltech/create_list.sh
 name_size_file = "data/caltech/test_name_size.txt"
 # The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
-pretrain_model = "models/VGGNet/VOC0712Plus/SSD_512x512_ft/VGG_VOC0712Plus_SSD_512x512_ft_iter_160000.caffemodel"
+# pretrain_model = "models/VGGNet/VOC0712Plus/SSD_512x512_ft/VGG_VOC0712Plus_SSD_512x512_ft_iter_160000.caffemodel"
+pretrain_model = "models/VGGNet/caltech/VGG_caltech_SSD_512x512_ft_iter_16000.caffemodel"
 # Stores LabelMapItem.
 label_map_file = "data/caltech/labelmap_caltech.prototxt"
 
@@ -304,7 +305,7 @@ multibox_loss_param = {
 loss_param = {
     'normalization': normalization_mode,
     }
-
+    
 # parameters for generating priors.
 # minimum dimension of input image
 min_dim = 512
@@ -328,9 +329,9 @@ for ratio in xrange(min_ratio, max_ratio + 1, step):
 min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100.]] + min_sizes
 max_sizes = [[min_dim * 7 / 100., min_dim * 10 / 100.]] + max_sizes
 steps = [8, 16, 32, 64, 128, 256, 512]
-aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
+# aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
+aspect_ratio_per_layer = [0.41]
 aspect_ratios = [aspect_ratio_per_layer]*len(mbox_source_layers)
-#aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
 # L2 normalize conv4_3.
 normalizations = [20, -1, -1, -1, -1, -1, -1]
 # variance used to encode/decode prior bboxes.
@@ -340,6 +341,9 @@ else:
   prior_variance = [0.1]
 flip = False
 clip = False
+extra_ar = False
+loc_postfix = ""
+conf_postfix = ""
 
 # Solver parameters.
 # Defining which GPUs to use.
@@ -394,7 +398,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 20000,
+    'test_interval': 10000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -453,8 +457,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
-        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix="_ft",loc_postfix="_ft")
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 # Create the MultiBoxLossLayer.
 name = "mbox_loss"
@@ -482,8 +486,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
-        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix="_ft",loc_postfix="_ft")
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:

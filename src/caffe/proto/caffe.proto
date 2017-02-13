@@ -1423,6 +1423,9 @@ message PriorBoxParameter {
 
   // Offset to the top left corner of each cell.
   optional float offset = 13 [default = 0.5];
+
+  // Use additional aspect ratio of 1
+  optional bool extra_ar = 14 [default = false];
 }
 
 message PythonParameter {
