@@ -337,12 +337,14 @@ max_sizes = []
 for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100.]] + min_sizes
-max_sizes = [[min_dim * 7 / 100., min_dim * 10 / 100.]] + max_sizes
+min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100., min_dim * 8.5 / 100.]] + min_sizes
+# max_size is only used to compute the additional default bb with aspect_ratio = 1 and scale = sqrt(min_size*max_size)
+# which are useless currently in our model because we set the extra_ar to false
+max_sizes = [[min_dim * 7 / 100., min_dim * 8.5 / 100., min_dim * 10 / 100.]] + max_sizes 
 steps = [8, 16, 32, 64, 128, 256, 512]
-aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
+# aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
+aspect_ratio_per_layer = [0.41]
 aspect_ratios = [aspect_ratio_per_layer]*len(mbox_source_layers)
-#aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
 # L2 normalize conv4_3.
 normalizations = [20, -1, -1, -1, -1, -1, -1]
 # variance used to encode/decode prior bboxes.
@@ -352,6 +354,9 @@ else:
   prior_variance = [0.1]
 flip = False
 clip = False
+extra_ar = False
+loc_postfix = ""
+conf_postfix = ""
 
 # Solver parameters.
 # Defining which GPUs to use.
@@ -467,8 +472,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
-        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix="_ft",loc_postfix="_ft")
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 # Create the MultiBoxLossLayer.
 name = "mbox_loss"
@@ -496,8 +501,8 @@ AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
         use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
         aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
-        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip,
-        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix="_ft",loc_postfix="_ft")
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:

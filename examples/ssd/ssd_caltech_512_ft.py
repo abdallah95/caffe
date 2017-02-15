@@ -269,8 +269,7 @@ job_file = "{}/{}.sh".format(job_dir, model_name)
 # Stores the test image names and sizes. Created by data/caltech/create_list.sh
 name_size_file = "data/caltech/test_name_size.txt"
 # The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
-# pretrain_model = "models/VGGNet/VOC0712Plus/SSD_512x512_ft/VGG_VOC0712Plus_SSD_512x512_ft_iter_160000.caffemodel"
-pretrain_model = "models/VGGNet/caltech/VGG_caltech_SSD_512x512_ft_iter_16000.caffemodel"
+pretrain_model = "models/VGGNet/VOC0712Plus/SSD_512x512_ft/VGG_VOC0712Plus_SSD_512x512_ft_iter_160000.caffemodel"
 # Stores LabelMapItem.
 label_map_file = "data/caltech/labelmap_caltech.prototxt"
 
@@ -326,8 +325,10 @@ max_sizes = []
 for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100.]] + min_sizes
-max_sizes = [[min_dim * 7 / 100., min_dim * 10 / 100.]] + max_sizes
+min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100., min_dim * 8.5 / 100.]] + min_sizes
+# max_size is only used to compute the additional default bb with aspect_ratio = 1 and scale = sqrt(min_size*max_size)
+# which are useless currently in our model because we set the extra_ar to false
+max_sizes = [[min_dim * 7 / 100., min_dim * 8.5 / 100., min_dim * 10 / 100.]] + max_sizes 
 steps = [8, 16, 32, 64, 128, 256, 512]
 # aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
 aspect_ratio_per_layer = [0.41]
@@ -383,11 +384,11 @@ solver_param = {
     'base_lr': base_lr,
     'weight_decay': 0.0005,
     'lr_policy': "multistep",
-    'stepvalue': [80000, 100000, 120000],
+    'stepvalue': [10000, 15000, 20000],
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 120000,
+    'max_iter': 20000,
     'snapshot': 1000,
     'display': 10,
     'average_loss': 10,
@@ -398,7 +399,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 10000,
+    'test_interval': 20001,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
