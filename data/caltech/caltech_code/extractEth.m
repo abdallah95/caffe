@@ -1,11 +1,11 @@
-
-idls = readIDL('lp-annot.idl');
+function extractEth(s)
+idls = readIDL('eth_data/lp-annot.idl');
 count = 0;
-[k, num_images] = size(idls);
+[~, num_images] = size(idls);
 for i=1:num_images
     im = idls(1,i);
-    copyfile(im.img,'../trainval/images/');
-    fid = fopen(['../trainval/annotations/' im.img(6:21) '.txt'],'w');
+    copyfile(['eth_data/' im.img],[s '/images/']);
+    fid = fopen([s '/annotations/' im.img(6:21) '.txt'],'w');
     for j=1:size(im.bb)
         bb = im.bb(j,:);
         xmin = bb(1); ymin = bb(2);
@@ -18,4 +18,5 @@ for i=1:num_images
     end
     fclose(fid);
 end
-count
+disp([num2str(count) ' bounding boxes were extracted.']);
+end

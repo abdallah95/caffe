@@ -56,5 +56,5 @@ function idl=readIDL(filename)
 	end
 	fclose(fid);
   
-  fprintf('%d bounding boxes loaded.', bbnum);
+  disp([num2str(bbnum) ' bounding boxes loaded.']);
 end

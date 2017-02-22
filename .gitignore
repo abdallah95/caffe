@@ -74,8 +74,8 @@ data/caltech/caltech_code/data-TudBrussels/
 data/caltech/caltech_code/results/
 data/caltech/trainval/
 data/caltech/test/
-data/caltech/eth_data/left/
-data/caltech/eth_data/lp-left.tar.gz
+data/caltech/caltech_code/eth_data/left/
+data/caltech/caltech_code/eth_data/lp-left.tar.gz
 models/*
 *.caffemodel
 *.caffemodel.h5
