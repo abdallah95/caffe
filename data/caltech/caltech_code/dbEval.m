@@ -121,8 +121,8 @@ algs = {
   'SA-FastRCNN',      0, clrs(57,:),  '--'
   'RPN+BF',           0, clrs(58,:),  '-'
   'MS-CNN',           0, clrs(59,:),  '--'
-  'SSD',              0, clrs(60,:),  '--'
-  'SSD-FT',           0, clrs(61,:),  '--'
+  'SSD-ours',         0, clrs(60,:),  '--'
+  'SSD-ours-old',     0, clrs(61,:),  '--'
   'F-DNN',            0, clrs(62,:),  '--'};
 algs=cell2struct(algs',{'name','resize','color','style'});
 

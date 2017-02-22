@@ -13,6 +13,7 @@ do
 		mkdir $set
 	fi
 	if [ ! -d $set/$vid ]; then
+		echo $set/$vid
 		mkdir $set/$vid
 	fi
 	echo $xmin $ymin $width $height $score >> $set/$vid/$frame.txt
