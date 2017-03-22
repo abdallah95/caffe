@@ -77,6 +77,11 @@ data/caltech/test/
 data/caltech/caltech_code/eth_data/left/
 data/caltech/caltech_code/eth_data/lp-left.tar.gz
 models/*
+!models/VGGNet/
+models/VGGNet/*
+!models/VGGNet/caltech/
+models/VGGNet/caltech/*
+!models/VGGNet/caltech/SSD_512x512_ft_quantized/
 *.caffemodel
 *.caffemodel.h5
 *.solverstate

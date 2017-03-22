@@ -1,0 +1,27 @@
+train_net: "models/VGGNet/caltech/SSD_512x512_ft_quantized/train.prototxt"
+test_net: "models/VGGNet/caltech/SSD_512x512_ft_quantized/test.prototxt"
+test_iter: 4024
+test_interval: 20001
+base_lr: 0.001
+display: 10
+max_iter: 0
+lr_policy: "multistep"
+gamma: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 0
+snapshot_prefix: "models/VGGNet/caltech/SSD_512x512_ft_quantized/VGG_caltech_SSD_512x512_ft"
+solver_mode: GPU
+device_id: 0
+debug_info: false
+snapshot_after_train: false
+test_initialization: true
+average_loss: 10
+stepvalue: 10000
+stepvalue: 15000
+stepvalue: 20000
+iter_size: 32
+type: "SGD"
+eval_type: "detection"
+ap_version: "11point"
+
