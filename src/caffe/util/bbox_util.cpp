@@ -2133,6 +2133,9 @@ vector<cv::Scalar> GetColors(const int n) {
 static clock_t start_clock = clock();
 static cv::VideoWriter cap_out;
 
+static float fps = 0.0f;
+static int num_img_processed = 0;
+
 template <typename Dtype>
 void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
                    const float threshold, const vector<cv::Scalar>& colors,
@@ -2146,8 +2149,14 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     return;
   }
   // Comute FPS.
-  float fps = num_img / (static_cast<double>(clock() - start_clock) /
-          CLOCKS_PER_SEC);
+  num_img_processed += num_img;
+  clock_t current_clock = clock();
+  double elapsed_time = (static_cast<double>(current_clock - start_clock) / CLOCKS_PER_SEC);
+  if(elapsed_time >= 1.0) {
+    fps = num_img_processed / elapsed_time;
+    num_img_processed = 0;
+    start_clock = clock();
+  }
 
   const Dtype* detections_data = detections->cpu_data();
   const int width = images[0].cols;
@@ -2233,7 +2242,6 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
       raise(SIGINT);
     }
   }
-  start_clock = clock();
 }
 
 template
