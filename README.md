@@ -107,4 +107,4 @@ examples/ssd/ contains python scripts to train with two initializations: with fi
   [Here](https://youtu.be/iKIW5Q0XAcg) is a demo video of running a SSD512 model on a video of a car driving in the streets of Beirut.
 
 ### Models
-Pretrained models will be uploaded soon.
+[SSD512 Caltech](https://www.dropbox.com/s/0hqs1hp196qbsyz/SSD_caltech_512x512_ft.zip?dl=0)
