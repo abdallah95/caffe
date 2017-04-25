@@ -66,7 +66,7 @@ examples/ssd/ contains python scripts to train with two initializations: with fi
 
 2. Download Caltech, ETH, and TUDBrussels pedestrian datasets from [Caltech](http://www.vision.caltech.edu/Image_Datasets/CaltechPedestrians/). By default, we assume the data is stored in `$HOME/data/caltech_code/`
 
-4. You need Matlab in order to use the caltech evaluation code. The code is available in data/caltech/caltech_code/. We extract 1 frame every 5 frames from caltech training dataset, and all frames of ETH and TUDBrussels datasets. (we also used the external ETH car dataset [here](https://data.vision.ee.ethz.ch/cvl/aess/dataset/) consisting of ~2100 pedestrians, though we don't think it made a huge difference, so you may not need it)
+4. You need Matlab in order to use the caltech evaluation code. The code is available in data/caltech/caltech_code/. We extract 1 frame every 5 frames from caltech training dataset, and all frames of ETH and TUDBrussels datasets. (we also used the external ETH car dataset [here](https://data.vision.ee.ethz.ch/cvl/aess/dataset/) consisting of ~2100 pedestrians, though we don't think it made a huge difference, so you may not need it). To extract datasets, you need to run `extractDatasets.m` matlab script in `data/caltech/caltech_code`. This will extract the datasets into `../trainval/` and `../test/` accordingly. If you want to extract more images from caltech dataset, just set the `skip` variable of `usatrain` in `dbInfo.m` accordingly.
 
 3. Create the LMDB file.
   ```Shell
@@ -107,4 +107,4 @@ examples/ssd/ contains python scripts to train with two initializations: with fi
   [Here](https://youtu.be/iKIW5Q0XAcg) is a demo video of running a SSD512 model on a video of a car driving in the streets of Beirut.
 
 ### Models
-[SSD512 Caltech]https://www.dropbox.com/s/1zvmbj2gtchdxhm/SSD_512x512_ft.zip?dl=0)
+[SSD512 Caltech](https://www.dropbox.com/s/1zvmbj2gtchdxhm/SSD_512x512_ft.zip?dl=0)
