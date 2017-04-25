@@ -167,7 +167,7 @@ det_out_param = {
     }
 
 # The job name should be same as the name used in examples/ssd/ssd_pascal.py.
-job_name = "SSD_{}".format(resize)
+job_name = "SSD_{}_ft".format(resize)
 # The name of the model. Modify it if you want.
 model_name = "VGG_caltech_{}".format(job_name)
 
