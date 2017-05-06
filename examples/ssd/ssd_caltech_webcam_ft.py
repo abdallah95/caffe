@@ -76,7 +76,6 @@ def AddExtraLayers(net, use_batchnorm=True, lr_mult=1):
     return net
 
 
-
 ### Modify the following parameters accordingly ###
 # The directory which contains the caffe code.
 # We assume you are running the script at the CAFFE_ROOT.
@@ -84,12 +83,11 @@ caffe_root = os.getcwd()
 
 # Set true if you want to start training right after generating all files.
 run_soon = True
-# The video file path
-#video_file = "test.mp4"
-video_file = "examples/videos/ILSVRC2015_train_00755001.mp4"
-
-
-# The parameters for the video demo
+# The device id for webcam
+webcam_id = 0
+# Number of frames to be skipped.
+skip_frames = 30
+# The parameters for the webcam demo
 
 # Key parameters used in training
 # If true, use batch norm for all newly added layers.
@@ -119,16 +117,17 @@ test_batch_size = 1
 # Only display high quality detections whose scores are higher than a threshold.
 visualize_threshold = 0.3
 # Size of video image.
-video_width = 1280
-video_height = 720
+webcam_width = 640
+webcam_height = 480
 # Scale the image size for display.
 scale = 0.8
 
 ### Hopefully you don't need to change the following ###
 resize = "{}x{}".format(resize_width, resize_height)
 video_data_param = {
-        'video_type': P.VideoData.VIDEO,
-        'video_file': video_file,
+        'video_type': P.VideoData.WEBCAM,
+        'device_id': webcam_id,
+        'skip_frames': skip_frames,
         }
 test_transform_param = {
         'mean_value': [104, 117, 123],
@@ -145,8 +144,8 @@ output_transform_param = {
         'resize_param': {
                 'prob': 1,
                 'resize_mode': P.Resize.WARP,
-                'height': int(video_height * scale),
-                'width': int(video_width * scale),
+                'height': int(webcam_height * scale),
+                'width': int(webcam_width * scale),
                 'interp_mode': [P.Resize.LINEAR],
                 },
         }
@@ -172,11 +171,11 @@ job_name = "SSD_{}_ft".format(resize)
 model_name = "VGG_caltech_{}".format(job_name)
 
 # Directory which stores the model .prototxt file.
-save_dir = "models/VGGNet/caltech/{}_video".format(job_name)
+save_dir = "models/VGGNet/caltech/{}_webcam".format(job_name)
 # Directory which stores the snapshot of trained models.
 snapshot_dir = "models/VGGNet/caltech/{}".format(job_name)
 # Directory which stores the job script and log file.
-job_dir = "jobs/VGGNet/caltech/{}_video".format(job_name)
+job_dir = "jobs/VGGNet/caltech/{}_webcam".format(job_name)
 
 # model definition files.
 test_net_file = "{}/test.prototxt".format(save_dir)

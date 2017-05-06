@@ -36,6 +36,7 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
       this->layer_param_.video_data_param();
   video_type_ = video_data_param.video_type();
   skip_frames_ = video_data_param.skip_frames();
+  frames_to_skip_ = skip_frames_;
   CHECK_GE(skip_frames_, 0);
 
   // Read an image, and use it to initialize the top blob.
@@ -109,7 +110,6 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     top_label = batch->label_.mutable_cpu_data();
   }
 
-  int skip_frames = skip_frames_;
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     cv::Mat cv_img;
@@ -127,28 +127,28 @@ void VideoDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     CHECK(cv_img.data) << "Could not load image!";
     read_time += timer.MicroSeconds();
-    if (skip_frames > 0) {
-      --skip_frames;
+    if (frames_to_skip_ > 0) {
+      --frames_to_skip_;
       --item_id;
     } else {
-      skip_frames = skip_frames_;
+      frames_to_skip_ = skip_frames_;
       timer.Start();
       // Apply transformations (mirror, crop...) to the image
       int offset = batch->data_.offset(item_id);
       this->transformed_data_.set_cpu_data(top_data + offset);
       this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
       trans_time += timer.MicroSeconds();
-    }
-    CHECK(cv_img.data) << "Could not load image!";
-    read_time += timer.MicroSeconds();
-    timer.Start();
-    // Apply transformations (mirror, crop...) to the image
-    int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-    trans_time += timer.MicroSeconds();
-    if (this->output_labels_) {
-      top_label[item_id] = 0;
+      CHECK(cv_img.data) << "Could not load image!";
+      read_time += timer.MicroSeconds();
+      timer.Start();
+      // Apply transformations (mirror, crop...) to the image
+      offset = batch->data_.offset(item_id);
+      this->transformed_data_.set_cpu_data(top_data + offset);
+      this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
+      trans_time += timer.MicroSeconds();
+      if (this->output_labels_) {
+        top_label[item_id] = 0;
+      } 
     }
   }
   timer.Stop();

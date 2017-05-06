@@ -11,59 +11,90 @@ import subprocess
 import sys
 
 # Add extra layers on top of a "base" network (e.g. VGGNet or Inception).
-def AddExtraLayers(net, use_batchnorm=True):
+def AddExtraLayers(net, use_batchnorm=True, lr_mult=1):
     use_relu = True
 
     # Add additional convolutional layers.
-    # 19 x 19
-    last_layer = net.keys()[-1]
+    # 32 x 32
+    from_layer = net.keys()[-1]
 
-    # 10 x 10
-    from_layer = last_layer
-    out_layer = "{}/conv1_1".format(last_layer)
-    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1)
+    # TODO(weiliu89): Construct the name using the last layer to avoid duplication.
+    # 16 x 16
+    out_layer = "conv6_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1,
+        lr_mult=lr_mult)
+
     from_layer = out_layer
+    out_layer = "conv6_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2,
+        lr_mult=lr_mult)
 
-    out_layer = "{}/conv1_2".format(last_layer)
-    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2)
+    # 8 x 8
     from_layer = out_layer
+    out_layer = "conv7_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
 
-    for i in xrange(2, 4):
-      out_layer = "{}/conv{}_1".format(last_layer, i)
-      ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 1, 0, 1)
-      from_layer = out_layer
+    from_layer = out_layer
+    out_layer = "conv7_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2,
+      lr_mult=lr_mult)
 
-      out_layer = "{}/conv{}_2".format(last_layer, i)
-      ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 512, 3, 1, 2)
-      from_layer = out_layer
+    # 4 x 4
+    from_layer = out_layer
+    out_layer = "conv8_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
 
-    # Add global pooling layer.
-    name = net.keys()[-1]
-    net.pool6 = L.Pooling(net[name], pool=P.Pooling.AVE, global_pooling=True)
+    from_layer = out_layer
+    out_layer = "conv8_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2,
+      lr_mult=lr_mult)
+
+    # 2 x 2
+    from_layer = out_layer
+    out_layer = "conv9_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
+
+    from_layer = out_layer
+    out_layer = "conv9_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 3, 1, 2,
+      lr_mult=lr_mult)
+
+    # 1 x 1
+    from_layer = out_layer
+    out_layer = "conv10_1"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 128, 1, 0, 1,
+      lr_mult=lr_mult)
+
+    from_layer = out_layer
+    out_layer = "conv10_2"
+    ConvBNLayer(net, from_layer, out_layer, use_batchnorm, use_relu, 256, 4, 1, 1,
+      lr_mult=lr_mult)
 
     return net
 
 
+
 ### Modify the following parameters accordingly ###
+# Notice: we do evaluation by setting the solver parameters approximately.
+# The reason that we do not use ./build/tools/caffe test ... is because it
+# only supports testing for classification problem now.
 # The directory which contains the caffe code.
 # We assume you are running the script at the CAFFE_ROOT.
 caffe_root = os.getcwd()
 
 # Set true if you want to start training right after generating all files.
 run_soon = True
-# Set true if you want to load from most recently saved snapshot.
-# Otherwise, we will load from the pretrain_model defined below.
-resume_training = True
-# If true, Remove old model files.
-remove_old_models = False
 
-# The database file for training data. Created by data/VOC0712/create_data.sh
-train_data = "examples/VOC0712/VOC0712_trainval_lmdb"
-# The database file for testing data. Created by data/VOC0712/create_data.sh
-test_data = "examples/VOC0712/VOC0712_test_lmdb"
+# The database file for training data. Created by data/caltech/create_data.sh
+train_data = "examples/caltech/caltech_trainval_lmdb"
+# The database file for testing data. Created by data/caltech/create_data.sh
+test_data = "examples/caltech/caltech_test_lmdb"
 # Specify the batch sampler.
-resize_width = 300
-resize_height = 300
+resize_width = 640
+resize_height = 480
 resize = "{}x{}".format(resize_width, resize_height)
 batch_sampler = [
         {
@@ -156,9 +187,11 @@ train_transform_param = {
         'mean_value': [104, 117, 123],
         'resize_param': {
                 'prob': 1,
-                'resize_mode': P.Resize.WARP,
+                'resize_mode': P.Resize.FIT_SMALL_SIZE,
                 'height': resize_height,
                 'width': resize_width,
+                'height_scale': resize_height,
+                'width_scale': resize_width,
                 'interp_mode': [
                         P.Resize.LINEAR,
                         P.Resize.AREA,
@@ -167,37 +200,65 @@ train_transform_param = {
                         P.Resize.LANCZOS4,
                         ],
                 },
+        'distort_param': {
+                'brightness_prob': 0.5,
+                'brightness_delta': 32,
+                'contrast_prob': 0.5,
+                'contrast_lower': 0.5,
+                'contrast_upper': 1.5,
+                'hue_prob': 0.5,
+                'hue_delta': 18,
+                'saturation_prob': 0.5,
+                'saturation_lower': 0.5,
+                'saturation_upper': 1.5,
+                'random_order_prob': 0.0,
+                },
+        'expand_param': {
+                'prob': 0.5,
+                'max_expand_ratio': 4.0,
+                },
         'emit_constraint': {
             'emit_type': caffe_pb2.EmitConstraint.CENTER,
             }
         }
-test_transform_param = {
-        'mean_value': [104, 117, 123],
-        'resize_param': {
+resize_param = {
                 'prob': 1,
-                'resize_mode': P.Resize.WARP,
+                'resize_mode': P.Resize.FIT_SMALL_SIZE,
                 'height': resize_height,
                 'width': resize_width,
+                'height_scale': resize_height,
+                'width_scale': resize_width,
                 'interp_mode': [P.Resize.LINEAR],
-                },
+                }
+test_transform_param = {
+        'mean_value': [104, 117, 123],
+        'resize_param': resize_param,
         }
 
-# A learning rate for batch_size = 1, num_gpus = 1.
-base_lr = 0.00004
+# If true, use batch norm for all newly added layers.
+# Currently only the non batch norm version has been tested.
+use_batchnorm = False
+lr_mult = 1
+# Use different initial learning rate.
+if use_batchnorm:
+    base_lr = 0.0004
+else:
+    # A learning rate for batch_size = 1, num_gpus = 1.
+    base_lr = 0.00004
 
-# Modify the job name if you want.
-job_name = "SSD_{}".format(resize)
+# The job name should be same as the name used in examples/ssd/ssd_pascal.py.
+job_name = "SSD_{}_ft".format(resize)
 # The name of the model. Modify it if you want.
-model_name = "ResNet_VOC0712_{}".format(job_name)
+model_name = "VGG_caltech_{}".format(job_name)
 
 # Directory which stores the model .prototxt file.
-save_dir = "models/ResNet/VOC0712/{}".format(job_name)
-# Directory which stores the snapshot of models.
-snapshot_dir = "models/ResNet/VOC0712/{}".format(job_name)
+save_dir = "models/VGGNet/caltech/{}_score".format(job_name)
+# Directory which stores the snapshot of trained models.
+snapshot_dir = "models/VGGNet/caltech/{}".format(job_name)
 # Directory which stores the job script and log file.
-job_dir = "jobs/ResNet/VOC0712/{}".format(job_name)
+job_dir = "jobs/VGGNet/caltech/{}_score".format(job_name)
 # Directory which stores the detection results.
-output_result_dir = "{}/data/VOCdevkit/results/VOC2007/{}/Main".format(os.environ['HOME'], job_name)
+output_result_dir = "examples/caltech/results/{}".format(job_name)
 
 # model definition files.
 train_net_file = "{}/train.prototxt".format(save_dir)
@@ -209,23 +270,37 @@ snapshot_prefix = "{}/{}".format(snapshot_dir, model_name)
 # job script path.
 job_file = "{}/{}.sh".format(job_dir, model_name)
 
-# Stores the test image names and sizes. Created by data/VOC0712/create_list.sh
-name_size_file = "data/VOC0712/test_name_size.txt"
-# The pretrained ResNet101 model from https://github.com/KaimingHe/deep-residual-networks.
-pretrain_model = "models/ResNet/ResNet-101-model.caffemodel"
+# Find most recent snapshot.
+max_iter = 0
+for file in os.listdir(snapshot_dir):
+  if file.endswith(".caffemodel"):
+    basename = os.path.splitext(file)[0]
+    iter = int(basename.split("{}_iter_".format(model_name))[1])
+    if iter > max_iter:
+      max_iter = iter
+
+if max_iter == 0:
+  print("Cannot find snapshot in {}".format(snapshot_dir))
+  sys.exit()
+
+# Stores the test image names and sizes. Created by data/caltech/create_list.sh
+name_size_file = "data/caltech/test_name_size.txt"
+# The resume model.
+pretrain_model = "{}_iter_{}.caffemodel".format(snapshot_prefix, max_iter)
 # Stores LabelMapItem.
-label_map_file = "data/VOC0712/labelmap_voc.prototxt"
+label_map_file = "data/caltech/labelmap_caltech.prototxt"
 
 # MultiBoxLoss parameters.
-num_classes = 21
+num_classes = 2
 share_location = True
 background_label_id=0
 train_on_diff_gt = True
 normalization_mode = P.Loss.VALID
 code_type = P.PriorBox.CENTER_SIZE
+ignore_cross_boundary_bbox = False
+mining_type = P.MultiBoxLoss.MAX_NEGATIVE
 neg_pos_ratio = 3.
 loc_weight = (neg_pos_ratio + 1.) / 4.
-mining_type = P.MultiBoxLoss.MAX_NEGATIVE
 multibox_loss_param = {
     'loc_loss_type': P.MultiBoxLoss.SMOOTH_L1,
     'conf_loss_type': P.MultiBoxLoss.SOFTMAX,
@@ -241,6 +316,7 @@ multibox_loss_param = {
     'neg_pos_ratio': neg_pos_ratio,
     'neg_overlap': 0.5,
     'code_type': code_type,
+    'ignore_cross_boundary_bbox': ignore_cross_boundary_bbox,
     }
 loss_param = {
     'normalization': normalization_mode,
@@ -248,43 +324,54 @@ loss_param = {
 
 # parameters for generating priors.
 # minimum dimension of input image
-min_dim = 300
-# res3b3_relu ==> 38 x 38
-# res5c_relu ==> 19 x 19
-# res5c_relu/conv1_2 ==> 10 x 10
-# res5c_relu/conv2_2 ==> 5 x 5
-# res5c_relu/conv3_2 ==> 3 x 3
-# pool6 ==> 1 x 1
-mbox_source_layers = ['res3b3_relu', 'res5c_relu', 'res5c_relu/conv1_2', 'res5c_relu/conv2_2', 'res5c_relu/conv3_2', 'pool6']
+min_dim = 480
+# conv4_3 ==> 64 x 64
+# fc7 ==> 32 x 32
+# conv6_2 ==> 16 x 16
+# conv7_2 ==> 8 x 8
+# conv8_2 ==> 4 x 4
+# conv9_2 ==> 2 x 2
+# conv10_2 ==> 1 x 1
+mbox_source_layers = ['conv4_3', 'conv5_3', 'fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'conv9_2', 'conv10_2']
 # in percent %
-min_ratio = 20
-max_ratio = 95
-step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 2)))
+min_ratio = 10
+max_ratio = 90
+step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 3)))
 min_sizes = []
 max_sizes = []
 for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [min_dim * 10 / 100.] + min_sizes
-max_sizes = [[]] + max_sizes
-aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3]]
+min_sizes = [[min_dim * 4 / 100., min_dim * 7 / 100., min_dim * 8.5 / 100.]] + [[min_dim * 7 / 100.]] + min_sizes
+# max_size is only used to compute the additional default bb with aspect_ratio = 1 and scale = sqrt(min_size*max_size)
+# which are useless currently in our model because we set the extra_ar to false
+max_sizes = [[min_dim * 7 / 100., min_dim * 8.5 / 100., min_dim * 10 / 100.]] + [[min_dim * 10 / 100.]] + max_sizes 
+steps = [8, 8, 16, 32, 64, 128, 256, 512]
+# aspect_ratio_per_layer = [0.15,0.3,0.41,0.6,0.75,0.9]
+aspect_ratio_per_layer = [0.41]
+aspect_ratios = [aspect_ratio_per_layer]*len(mbox_source_layers)
+# L2 normalize conv4_3.
+normalizations = [20, -1, -1, -1, -1, -1, -1, -1]
 # variance used to encode/decode prior bboxes.
 if code_type == P.PriorBox.CENTER_SIZE:
   prior_variance = [0.1, 0.1, 0.2, 0.2]
 else:
   prior_variance = [0.1]
-flip = True
-clip = True
+flip = False
+clip = False
+extra_ar = False
+loc_postfix = ""
+conf_postfix = ""
 
 # Solver parameters.
 # Defining which GPUs to use.
-gpus = "0,1,2,3"
+gpus = "0"
 gpulist = gpus.split(",")
 num_gpus = len(gpulist)
 
-# Divide the mini-batch to different GPUs.
-batch_size = 32
-accum_batch_size = 32
+# The number does not matter since we do not do training with this script.
+batch_size = 1
+accum_batch_size = 1
 iter_size = accum_batch_size / batch_size
 solver_mode = P.Solver.CPU
 device_id = 0
@@ -305,34 +392,36 @@ elif normalization_mode == P.Loss.FULL:
   base_lr *= 2000.
 
 # Evaluate on whole test set.
-num_test_image = 4952
+num_test_image = 4024
 test_batch_size = 1
-test_iter = num_test_image / test_batch_size
+# Ideally test_batch_size should be divisible by num_test_image,
+# otherwise mAP will be slightly off the true value.
+test_iter = int(math.ceil(float(num_test_image) / test_batch_size))
 
 solver_param = {
     # Train parameters
     'base_lr': base_lr,
     'weight_decay': 0.0005,
-    'lr_policy': "step",
-    'stepsize': 40000,
+    'lr_policy': "multistep",
+    'stepvalue': [80000, 100000, 120000],
     'gamma': 0.1,
     'momentum': 0.9,
     'iter_size': iter_size,
-    'max_iter': 60000,
-    'snapshot': 40000,
+    'max_iter': 0,
+    'snapshot': 0,
     'display': 10,
     'average_loss': 10,
     'type': "SGD",
     'solver_mode': solver_mode,
     'device_id': device_id,
     'debug_info': False,
-    'snapshot_after_train': True,
+    'snapshot_after_train': False,
     # Test parameters
     'test_iter': [test_iter],
     'test_interval': 10000,
     'eval_type': "detection",
     'ap_version': "11point",
-    'test_initialization': False,
+    'test_initialization': True,
     }
 
 # parameters for generating detection output.
@@ -348,8 +437,9 @@ det_out_param = {
         'label_map_file': label_map_file,
         'name_size_file': name_size_file,
         'num_test_image': num_test_image,
+        'resize_param': resize_param,
         },
-    'keep_top_k': 200,
+    'keep_top_k': 50,
     'confidence_threshold': 0.01,
     'code_type': code_type,
     }
@@ -361,7 +451,9 @@ det_eval_param = {
     'overlap_threshold': 0.5,
     'evaluate_difficult_gt': False,
     'name_size_file': name_size_file,
+    'resize_param': resize_param,
     }
+
 
 ### Hopefully you don't need to change the following ###
 # Check file.
@@ -379,16 +471,16 @@ net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size
         train=True, output_label=True, label_map_file=label_map_file,
         transform_param=train_transform_param, batch_sampler=batch_sampler)
 
-ResNet101Body(net, from_layer='data', use_pool5=False, use_dilation_conv5=True)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
+    dropout=False)
 
-# Use batch norm for the newly added layers.
-AddExtraLayers(net, use_batchnorm=True)
+AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
-# Don't use batch norm for location/confidence prediction layers.
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
-        use_batchnorm=False, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, num_classes=num_classes, share_location=share_location,
-        flip=flip, clip=clip, prior_variance=prior_variance, kernel_size=3, pad=1)
+        use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
+        aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 # Create the MultiBoxLossLayer.
 name = "mbox_loss"
@@ -408,16 +500,16 @@ net.data, net.label = CreateAnnotatedDataLayer(test_data, batch_size=test_batch_
         train=False, output_label=True, label_map_file=label_map_file,
         transform_param=test_transform_param)
 
-ResNet101Body(net, from_layer='data', use_pool5=False, use_dilation_conv5=True)
+VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
+    dropout=False)
 
-# Use batch norm for the newly added layers.
-AddExtraLayers(net, use_batchnorm=True)
+AddExtraLayers(net, use_batchnorm, lr_mult=lr_mult)
 
-# Don't use batch norm for location/confidence prediction layers.
 mbox_layers = CreateMultiBoxHead(net, data_layer='data', from_layers=mbox_source_layers,
-        use_batchnorm=False, min_sizes=min_sizes, max_sizes=max_sizes,
-        aspect_ratios=aspect_ratios, num_classes=num_classes, share_location=share_location,
-        flip=flip, clip=clip, prior_variance=prior_variance, kernel_size=3, pad=1)
+        use_batchnorm=use_batchnorm, min_sizes=min_sizes, max_sizes=max_sizes,
+        aspect_ratios=aspect_ratios, steps=steps, normalizations=normalizations,
+        num_classes=num_classes, share_location=share_location, flip=flip, clip=clip, extra_ar=extra_ar,
+        prior_variance=prior_variance, kernel_size=3, pad=1, lr_mult=lr_mult,conf_postfix=conf_postfix,loc_postfix=loc_postfix)
 
 conf_name = "mbox_conf"
 if multibox_loss_param["conf_loss_type"] == P.MultiBoxLoss.SOFTMAX:
@@ -471,42 +563,14 @@ with open(solver_file, 'w') as f:
     print(solver, file=f)
 shutil.copy(solver_file, job_dir)
 
-max_iter = 0
-# Find most recent snapshot.
-for file in os.listdir(snapshot_dir):
-  if file.endswith(".solverstate"):
-    basename = os.path.splitext(file)[0]
-    iter = int(basename.split("{}_iter_".format(model_name))[1])
-    if iter > max_iter:
-      max_iter = iter
-
-train_src_param = '--weights="{}" \\\n'.format(pretrain_model)
-if resume_training:
-  if max_iter > 0:
-    train_src_param = '--snapshot="{}_iter_{}.solverstate" \\\n'.format(snapshot_prefix, max_iter)
-
-if remove_old_models:
-  # Remove any snapshots smaller than max_iter.
-  for file in os.listdir(snapshot_dir):
-    if file.endswith(".solverstate"):
-      basename = os.path.splitext(file)[0]
-      iter = int(basename.split("{}_iter_".format(model_name))[1])
-      if max_iter > iter:
-        os.remove("{}/{}".format(snapshot_dir, file))
-    if file.endswith(".caffemodel"):
-      basename = os.path.splitext(file)[0]
-      iter = int(basename.split("{}_iter_".format(model_name))[1])
-      if max_iter > iter:
-        os.remove("{}/{}".format(snapshot_dir, file))
-
 # Create job file.
 with open(job_file, 'w') as f:
   f.write('cd {}\n'.format(caffe_root))
   f.write('./build/tools/caffe train \\\n')
   f.write('--solver="{}" \\\n'.format(solver_file))
-  f.write(train_src_param)
+  f.write('--weights="{}" \\\n'.format(pretrain_model))
   if solver_param['solver_mode'] == P.Solver.GPU:
-    f.write('--gpu {} 2>&1 | tee {}/{}.log\n'.format(gpus, job_dir, model_name))
+    f.write('--gpu {} 2>&1 | tee {}/{}_test{}.log\n'.format(gpus, job_dir, model_name, max_iter))
   else:
     f.write('2>&1 | tee {}/{}.log\n'.format(job_dir, model_name))
 

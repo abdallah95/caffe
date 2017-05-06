@@ -2130,8 +2130,13 @@ vector<cv::Scalar> GetColors(const int n) {
   return colors;
 }
 
-static clock_t start_clock = clock();
+
 static cv::VideoWriter cap_out;
+
+static CPUTimer fps_timer; 
+static float fps = 0.0f;
+static int num_img_processed = 0;
+static double elapsed_time = 0.0;
 
 template <typename Dtype>
 void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
@@ -2146,8 +2151,18 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     return;
   }
   // Comute FPS.
-  float fps = num_img / (static_cast<double>(clock() - start_clock) /
-          CLOCKS_PER_SEC);
+  num_img_processed += num_img;
+  if (!fps_timer.running()) {
+    fps_timer.Start();
+  }
+  fps_timer.Stop();
+  elapsed_time += fps_timer.MilliSeconds() / 1000.0;
+  fps_timer.Start();
+  if(elapsed_time >= 1.0) {
+    fps = num_img_processed / elapsed_time;
+    num_img_processed = 0;
+    elapsed_time = 0.0;
+  }
 
   const Dtype* detections_data = detections->cpu_data();
   const int width = images[0].cols;
@@ -2233,7 +2248,6 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
       raise(SIGINT);
     }
   }
-  start_clock = clock();
 }
 
 template
