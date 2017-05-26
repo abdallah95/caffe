@@ -8,7 +8,7 @@ Results are shown below:
 
 | Model | Overall miss-rate | Reasonable miss-rate | **FPS** (Geforce GTX Titan X) | Input resolution
 |:-------|:-----:|:-------:|:-------:|:-------:|
-| SSD512 (training from scratch + no hyper-parameters optimization) | 65.17% | 20.32%  | 22 | 640 x 480 |
+| SSD512 (VGG16) (training from scratch + no hyper-parameters optimization) | 65.17% | 20.32%  | 22 | 640 x 480 |
 | SSD512 (VGG16) | 54.44% | 11.89% | 24 | 512 x 512 |
 | SSD640 (VGG16) | 53.11% | 11.85%  | 20 | 640 x 480 |
 | F-DNN | 50.5% | 8.65%  | 6.25 | 640 x 480 |
