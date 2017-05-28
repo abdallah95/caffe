@@ -11,7 +11,7 @@ Results are shown below:
 | SSD512 (VGG16) (training from scratch + no hyper-parameters optimization) | 65.17% | 20.32%  | 22 | 640 x 480 |
 | SSD512 (VGG16) | 54.44% | 11.89% | 24 | 512 x 512 |
 | SSD640 (VGG16) | 53.11% | 11.85%  | 20 | 640 x 480 |
-| F-DNN | 50.5% | 8.65%  | 6.25 | 640 x 480 |
+| [F-DNN](https://arxiv.org/abs/1610.03466) | 50.5% | 8.65%  | 6.25 | 640 x 480 |
 
 ### Fixed-Point 16-bit Quantization
 We also worked on quantizing the model to dynamic 16-bit Fixed Point using [caffe ristretto](http://lepsucd.com/?page_id=621). The script to test the quantized model is available under `ssd-ristretto` branch by going to `models/VGGNet/caltech/SSD_512x512_ft_quantized` (Caffe ristretto doesn't require changing the .caffemodel file for quantization, only the .prototxt file is modified). The model performance decreased by less than 0.01%. We do not report the speed on the Quantized model, Ristretto simulates the 16-bit fixed point arithmetic using floating point arithmetic because there's no hardware support for fixed point arithmetic on the GPU, but with hardware support we expect the model to be faster.
